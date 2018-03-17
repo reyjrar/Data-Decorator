@@ -2,7 +2,11 @@ package Data::Decorator::Role::Plugin;
 # ABSTRACT: Common interface for implementing an Data::Decorator plugin
 
 use Moo::Role;
-use Types::Standard qw(Bool Int Str);
+use Types::Standard qw(Bool HashRef Int Str);
+
+with qw(
+    Data::Decorator::Role::Cache
+);
 
 # VERSION
 
@@ -94,135 +98,64 @@ has 'namespace' => (
     required => 1,
 );
 
+=attr fields
 
-=attr B<field>
+Field mapping for the data decoration as a hashref, ie:
 
-The field in the context of the log to use to use with the C<matcher> to select
-a log for parsing.  This is required.
+    fields:
+      src_ip: src_rdns
 
-The rules for parsing are:
+Tells the decorator plugin to use C<src_ip> as the source field for its
+lookup, and to store the results in the C<src_rdns> field.
 
-=over 2
+Decorators which return more than one key/value will use this key as the root
+key for the data element.  Consider we use the C<GeoIP> decorator, which
+returns a hash, and we used this config:
 
-=item B<*>
+    fields:
+      src_ip: src_geoip
 
-Reserved for it's use as with C<matcher> set to '*', which forces the context
-to be evaluated for every document.
+Documents that match this rule, will end up adding the hash returned at the
+C<src_geoip> space, or
 
-    sub _build_field   { '*' }
-    sub _build_matcher { '*' }
+    src_ip: 1.2.3.4
+    src_geoip:
+      city: Baltimore
+      cc: US
+      location: ...
+=cut
 
-Will match every document it's sent.
+has fields => (
+    is      => 'ro',
+    isa     => HashRef,
+    default => sub {{}},
+);
 
-=item B<_exists_>
+=attr config
 
-Instead of apply the C<matcher> to the value, we'll check it against the key.
-
-Say we wanted to run a reverse DNS check on an IP we could:
-
-    sub _build_field   { '_exists_' }
-    sub _build_matcher { /_ip$/ }
-
-Exists supports the following matchers:
-
-=over 2
-
-=item B<String>
-
-Simple string match against the key
-
-=item B<Regex>
-
-Apply the regex to the key
-
-=item B<ArrayRef>
-
-Checks if the key is contained in the array
-
-=back
-
-=item B<String>
-
-The string is considered the name of the field in the document.  That key is
-used to check it's value against the C<matcher>.  Using a string are a field name supports
-the following C<matcher>'s.
-
-=over 2
-
-=item B<String>
-
-Check if the lowercase string matches the value at the key designated by B<field>, i.e.
-
-    sub _build_field   { 'program' }
-    sub _build_matcher { 'sshd' }
-
-This will call C<decorate> on documents with a field 'program' which has the
-value 'sshd'.
-
-=item B<Regex>
-
-Checks the value in the field for against the regex.
-
-    sub _build_field   { 'program' }
-    sub _build_matcher { /^postfix/ }
-
-This will call C<decorate> on documents with a field 'program' matching the
-regex '^postfix'.
-
-=item B<ArrayRef>
-
-Checks the value in the field against all values in the array.
-
-
-    sub _build_field   { 'program' }
-    sub _build_matcher { [qw(sort suricata)] }
-
-This will call C<decorate> on documents with a field 'program' that is either
-'snort' or 'suricata'.
-
-=item B<CodeRef>
-
-Check the return value of the code reference passing the value at the field
-into the function.
-
-    sub _build_field   { 'src_ip' }
-    sub _build_matcher { \&check_bad_ips }
-
-This will call C<decorate> on documents with a field 'src_ip' and call the
-C<check_bad_ips()> function with the value in the 'src_ip' field if the sub
-routine return true.
-
-=back
-
-=back
+Config parameter for the plugin as a hash reference.
 
 =cut
 
-has 'field' => (
+has config => (
     is      => 'ro',
-    isa     => Str,
-    lazy    => 1,
-    builder => '_build_field',
+    isa     => HashRef,
+    default => sub {{}},
 );
 
-sub _build_field { 'program' }
+=attr is_final
 
-=attr B<matcher>
-
-Maybe a B<String>, B<Regex>, B<ArrayRef>, or a B<CodeRef>. See documenation on
-L<field> for information on the combinations and how to use them.
+If this is set to true, any documents matching this plugin will skip evaluation
+of any remaining plugins.  The default is false.  Use sparringly, it exists,
+but you probably won't need it.
 
 =cut
 
-has 'matcher' => (
-    is      => 'ro',
-    isa     => Defined,
-    lazy    => 1,
-    builder => '_build_matcher',
+has 'is_final' => (
+    is       => 'ro',
+    isa      => Bool,
+    default  => sub { 0 },
 );
-
-sub _build_matcher { my ($self) = shift; $self->name; }
-
 
 =head1 SEE ALSO
 

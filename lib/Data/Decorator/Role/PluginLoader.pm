@@ -3,10 +3,12 @@ package Data::Decorator::Role::PluginLoader;
 # ABSTRACT: Implements the plumbing for an object to support plugins
 
 use List::Util qw(any);
-use Moo::Role;
-use Types::Standard qw(ArrayRef HashRef InstanceOf Str);
-use namespace::autoclean;
 use Module::Pluggable::Object;
+use Ref::Util qw(is_arrayref);
+use Types::Standard qw(ArrayRef HashRef InstanceOf Str);
+
+use Moo::Role;
+use namespace::autoclean;
 
 # VERSION
 
@@ -25,9 +27,7 @@ plug.
     sub find {
         my ($self,$log) = @_;
 
-        foreach my $p ($self->plugins) {
-            return $p->name if $p->match_log($log);
-        }
+        foreach my $p ($self->plugins) {}
     }
 
     package main;
@@ -35,9 +35,6 @@ plug.
     my $decorator = Data::Decorator->new(
         search_path => [ qw( MyApp::Decorator ) ],
         disabled    => [ qw( Data::Decorator::Plugin::GeoIP ) ],
-        config      => {
-            Referer => { DomainList => '/var/db/bad_domains' },
-        }
     );
 
 =attr namespace
@@ -106,102 +103,54 @@ sub _build_loader {
     my $loader = Module::Pluggable::Object->new(
         search_path => [ $self->namespace, @{$self->search_path} ],
         except      => $self->disabled,
-        require     => 1,
     );
     return $loader;
 }
 
-=attr plugins_config
-
-A HashRef of configs for passing along to our plugins. The init arg for this
-parameter is 'config' to simplify instantiation and config files.
-
-Special considerations are taken when processing the hash.  The C<namespace> and C<search_path> are
-automatically prepended to all keys to allow pretty config.  This means I can pass a config like this:
-
-    my $decorator = Data::Decorator->new(
-        search_path => [qw(MyApp::Decorators)],
-        config => {
-            GeoIP               => { enabled => 1 },
-            DNS::Reverse        => { enabled => 0 },
-            Data::Decorator::Plugin::GeoIP => { enabled => 0 },
-        },
-    );
-
-This will expand the config to:
-
-        config => {
-            MyApp::Decoratos::GeoIP               => { enabled => 1 },
-            MyApp::Decorators::DNS::Reverse       => { enabled => 0 },
-            Data::Decorator::Plugin::DNS::Reverse => { enabled => 0 },
-            Data::Decorator::Plugin::GeoIP        => { enabled => 0 },
-        },
-
-The explicit config for 'Data::Decorator::Plugin::GeoIP' is retained.
-
-=cut
-
-has 'plugins_config' => (
-    is       => 'ro',
-    isa      => HashRef,
-    default  => sub {{}},
-    init_arg => 'config',
-);
-
-=attr plugins
-
-The priority sorted list of plugin objects found by the loader.  The C<plugins> call
-expects the C<loader> function to return a list of class names, not objects.
-
-=cut
-
 has 'plugins' => (
-    is => 'ro',
-    isa => ArrayRef,
-    lazy => 1,
-    builder => '_build_plugins',
+    is  => 'lazy',
+    isa => HashRef,
 );
 
 sub _build_plugins {
-    my $self = shift;
-    my @plugins = ();
+    my ($self) = @_;
 
-    # Make short hand configs possible
-    my %config = ();
-    my @search = grep { defined && length } ($self->namespace, @{ $self->search_path });
-    foreach my $alias ( keys %{ $self->plugins_config } ) {
-        # Copy into our local hash
-        $config{$alias} = $self->plugins_config->{$alias};
-        # If we find our search path as a prefix, skip
-        next if any { /^$alias/ } @search;
-        foreach my $prefix (@search) {
-            my $class = join('::', $prefix, $alias);
-            next if exists $config{$class};
-            # Copy the config
-            $config{$class} = $config{$alias};
-        }
-    }
-    foreach my $class ( $self->loader->plugins ) {
+    my %plugins = ();
+    foreach my $plugin ( $self->loader->plugins ) {
         eval {
-            my $opts = $config{$class} || {};
-            $opts->{namespace} = $self->namespace;
-            push @plugins, $class->new(%{ $opts });
+            require $plugin;
             1;
         } or do {
             my $err = $@;
-            ## no critic
-            no strict 'refs';
-            my $warn_var = sprintf '%s::SuppressWarnings', $class;
-            my $suppress_warnings = eval "$$warn_var" || 0;
-            warn $err unless $suppress_warnings;
-            ## use critic
+            warn "Found $plugin, but could not load it: $err";
+            next;
         };
+        # Install Aliases
+        foreach my $path ( $self->namespace, @{ $self->search_path } )  {
+            if(index($plugin, $path) == 0) {
+                # Grab Alias
+                my $alias = substr($plugin, length($path) + 2 );
+                if( exists $plugins{$alias} ) {
+                    my $aliases = is_arrayref($plugins{$alias}) ? $plugins{$alias} : [];
+                    push @{ $aliases }, $plugin;
+                    $plugins{$alias} = $aliases;
+                }
+                else {
+                    $plugins{$alias} = $plugin;
+                }
+            }
+        }
+        # Register the Class
+        $plugins{$plugin} = $plugin;
     }
-    return [
-        sort { $a->priority <=> $b->priority || $a->name cmp $b->name }
-        grep { $_->enabled }
-        @plugins
-    ];
+    foreach my $name (sort keys %plugins) {
+        if( is_arrayref($plugins{$name}) ) {
+            warn sprintf "Disabling alias '%s' as multiple plugins requested it: plugins=%s",
+                $name, join( ',', sort @{ $plugins{$name} } );
+            delete $plugins{$name};
+        }
+    }
+    return \%plugins;
 }
 
 =head1 SEE ALSO

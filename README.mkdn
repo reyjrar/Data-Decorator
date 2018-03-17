@@ -1,0 +1,68 @@
+# NAME
+
+Data::Decorator - Data Decorator Adds Context to Hashes
+
+# VERSION
+
+version 0.001
+
+# SYNOPSIS
+
+    use Data::Decorator;
+
+# DESCRIPTION
+
+Data::Decorator is
+
+# ATTRIBUTES
+
+## decorators
+
+A hash ref of named decorator objects with their initialization parameters,
+
+# METHODS
+
+## decorate
+
+Takes a HashRef and iterates through all the available plugins applying a
+their transformations to the HashRef by calling their `decorate` method.
+
+# SEE ALSO
+
+[Data::Decorator::Role::PluginLoader](https://metacpan.org/pod/Data%3A%3ADecorator%3A%3ARole%3A%3APluginLoader), [Data::Decorator::Role::Timing](https://metacpan.org/pod/Data%3A%3ADecorator%3A%3ARole%3A%3ATiming)
+
+# AUTHOR
+
+Brad Lhotsky <brad@divisionbyzero.net>
+
+# COPYRIGHT AND LICENSE
+
+This software is Copyright (c) 2022 by Brad Lhotsky.
+
+This is free software, licensed under:
+
+    The (three-clause) BSD License
+
+# SUPPORT
+
+## Websites
+
+The following websites have more information about this module, and may be of help to you. As always,
+in addition to those websites please use your favorite search engine to discover more resources.
+
+- MetaCPAN
+
+    A modern, open-source CPAN search engine, useful to view POD in HTML format.
+
+    [https://metacpan.org/release/Data-Decorator](https://metacpan.org/release/Data-Decorator)
+
+- RT: CPAN's Bug Tracker
+
+    The RT ( Request Tracker ) website is the default bug/issue tracking system for CPAN.
+
+    [https://rt.cpan.org/Public/Dist/Display.html?Name=Data-Decorator](https://rt.cpan.org/Public/Dist/Display.html?Name=Data-Decorator)
+
+## Source Code
+
+This module's source code is available by visiting:
+[https://github.com/reyjrar/Data-Decorator](https://github.com/reyjrar/Data-Decorator)
