@@ -84,7 +84,7 @@ sub add {
             unless grep { $k eq $_ } @{ $fields->{$src_field} };
         # Add the data
         if( exists $doc->{$k} ) {
-            if( is_arrayred($doc->{$k}) ) {
+            if( is_arrayref($doc->{$k}) ) {
                 push @{ $doc->{$k} }, $data->{$k};
             }
             else {

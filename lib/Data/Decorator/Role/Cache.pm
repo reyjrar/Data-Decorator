@@ -59,9 +59,16 @@ has cache_root_dir => (
 
 sub _build_cache_root_dir { "$ENV{HOME}/.cache/data-decorator" }
 
+=attr cache_config
+
+Passed in as C<cache> init attribute.  Pass in your custom L<CHI> config,
+defaults to using the C<File> driver.
+
+=cut
+
 has cache_config => (
-    is => 'ro',
-    isa => HashRef,
+    is       => 'ro',
+    isa      => HashRef,
     init_arg => 'cache',
 );
 
@@ -72,7 +79,7 @@ This is the assembled C<CHI> instance.
 =cut
 
 has cache => (
-    is => 'lazy',
+    is  => 'lazy',
     isa => InstanceOf['CHI'],
 );
 
@@ -80,8 +87,8 @@ sub _build_cache {
     my ($self) = @_;
 
     my %default = (
-        expires_in => $self->expiry,
-        namespace  => $self->namespace,
+        expires_in => $self->cache_expiry,
+        namespace  => $self->cache_namespace,
     );
     my %params = ();
     my $params = $self->cache_config();
@@ -93,8 +100,8 @@ sub _build_cache {
     }
     else {
         %params = (
-            driver     => 'File',
-            root_dir   => $params->{root_dir} || $self->cache_root_dir,
+            driver   => 'File',
+            root_dir => $params->{root_dir} || $self->cache_root_dir,
         );
     }
 

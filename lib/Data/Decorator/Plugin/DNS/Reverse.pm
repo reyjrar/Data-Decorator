@@ -39,6 +39,13 @@ sub _build_nameserver {
     return Net::DNS::Resolver->new(%opts);
 }
 
+=method decorate
+
+Takes an L<Data::Decorator::Result> object and scans for source fields with IP
+addresses and performs a reverse DNS lookup.
+
+=cut
+
 sub decorate {
     my ($self,$result) = @_;
 
