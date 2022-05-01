@@ -19,17 +19,34 @@ with qw(
     Data::Decorator::Role::Timing
 );
 
+sub _build_namespace { 'Data::Decorator::Plugin' }
+
+=attr decorators_config
+
+B<Init Arg is decorators>.
+
+Config for the decorators to load.
+
+=cut
+
+has decorators_config => (
+    is       => 'ro',
+    isa      => HashRef,
+    init_arg => 'decorators',
+    default  => sub {{}},
+);
+
+
 =attr decorators
 
 A hash ref of named decorator objects with their initialization parameters,
 
 =cut
 
-sub _build_namespace { 'Data::Decorator::Plugin' }
-
 has 'decorators' => (
-    is => 'lazy',
-    isa => ArrayRef[ConsumerOf['Data::Decorator::Role::Plugin']],
+    is       => 'lazy',
+    isa      => ArrayRef[ConsumerOf['Data::Decorator::Role::Plugin']],
+    init_arg => undef,
 );
 
 sub _build_decorators {
@@ -55,7 +72,11 @@ sub _build_decorators {
         } unless exists $plugins->{$class};
 
         eval {
-            my $instance = $plugins->{$class}->new( name => $name, $def );
+            my $instance = $plugins->{$class}->new(
+                namespace => $self->namespace,
+                name => $name,
+                %{ $def }
+            );
             push @decorators, $instance if $instance->enabled;
             1;
         } or do {

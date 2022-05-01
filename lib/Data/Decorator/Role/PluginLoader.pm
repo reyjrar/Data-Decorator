@@ -4,6 +4,7 @@ package Data::Decorator::Role::PluginLoader;
 
 use List::Util qw(any);
 use Module::Pluggable::Object;
+use Module::Load qw(load);
 use Ref::Util qw(is_arrayref);
 use Types::Standard qw(ArrayRef HashRef InstanceOf Str);
 
@@ -118,7 +119,7 @@ sub _build_plugins {
     my %plugins = ();
     foreach my $plugin ( $self->loader->plugins ) {
         eval {
-            require $plugin;
+            load $plugin;
             1;
         } or do {
             my $err = $@;

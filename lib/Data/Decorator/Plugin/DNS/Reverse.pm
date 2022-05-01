@@ -56,7 +56,9 @@ sub decorate {
         my $dst = $fields->{$src};
 
         my $reverse = $self->cache->compute( $doc->{$src} => sub {
-            'got result';
+            my $result = $self->nameserver->query( $doc->{$src}, 'PTR' );
+            use DDP;
+            p($result);
         });
 
         if( length $reverse ) {

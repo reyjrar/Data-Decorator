@@ -80,7 +80,7 @@ This is the assembled C<CHI> instance.
 
 has cache => (
     is  => 'lazy',
-    isa => InstanceOf['CHI'],
+    isa => InstanceOf['CHI::Driver'],
 );
 
 sub _build_cache {
