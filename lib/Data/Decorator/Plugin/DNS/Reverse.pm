@@ -28,10 +28,6 @@ These are the options to specify in the C<config> block when instantiating an ob
 
 A hash reference of options to pass to L<Net::DNS::Resolver> which will be used for the lookups.
 
-=item B<no_cache>
-
-Set to true to completely disable the file system caching.
-
 =back
 
 =head1 Example Config
