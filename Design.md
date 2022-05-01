@@ -9,7 +9,7 @@ Overview of how to use and layout the code for Data::Decorator.
 ---
 rdns:
   plugin: DNS::Reverse
-  cache: 10m
+  no_cache: 1
   fields:
     dst_ip: dst_rdns
     src_ip: src_rdns

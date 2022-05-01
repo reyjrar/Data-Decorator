@@ -25,10 +25,11 @@ Disable caching by setting to true.
 =cut
 
 has no_cache => (
-    is      => 'ro',
+    is      => 'lazy',
     isa     => Bool,
-    default => sub { 0 },
 );
+
+sub _build_no_cache { 0 }
 
 =attr cache_namespace
 
