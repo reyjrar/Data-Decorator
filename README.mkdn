@@ -16,6 +16,12 @@ Data::Decorator is
 
 # ATTRIBUTES
 
+## decorators\_config
+
+**Init Arg is decorators**.
+
+Config for the decorators to load.
+
 ## decorators
 
 A hash ref of named decorator objects with their initialization parameters,
