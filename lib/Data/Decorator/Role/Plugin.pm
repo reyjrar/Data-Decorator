@@ -18,12 +18,12 @@ Provides the interface to load L<Data::Decorator> plugins in the correct order.
     package MyApp::Decorators::Db::LookUpEmployee;
 
     use Moo::Role;
-    with qw( eris::role::plugin );
+    with qw( Data::Decorator::Plugin );
 
 
 =head1 INTERFACE
 
-=head2 decorate
+=head2 lookup
 
 This method will be called everytime a document matches this context.  It receives
 a copy of the HashRef it was passed, return the decorated HashRef.
@@ -31,8 +31,23 @@ a copy of the HashRef it was passed, return the decorated HashRef.
 =cut
 
 requires qw(
-    decorate
+    lookup
 );
+
+around lookup => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    if( $self->no_cache ) {
+        return $orig->($self,@_);
+    }
+
+    my ($src,$dst,$doc) = @_;
+
+    return $self->cache->compute($doc->{$src}, sub {
+        $self->lookup(@_);
+    });
+};
 
 =attr name
 

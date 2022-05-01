@@ -11,6 +11,8 @@ with qw(
     Data::Decorator::Role::Plugin
 );
 
+# VERSION
+
 =head1 Plugin Overrides
 
     * Cache Expiry is set to 5m
@@ -84,35 +86,22 @@ sub _build_nameserver {
     return Net::DNS::Resolver->new(%opts);
 }
 
-=method decorate
+=method lookup
 
 Takes an L<Data::Decorator::Result> object and scans for source fields with IP
 addresses and performs a reverse DNS lookup.
 
 =cut
 
-sub decorate {
-    my ($self,$result) = @_;
+sub lookup {
+    my ($self,$src,$dst,$doc) = @_;
 
-    my $fields = $self->fields;
-    my $doc    = $result->document;
-    foreach my $src ( sort keys %{ $fields } ) {
-        next unless length $doc->{$src};
-        my $dst = $fields->{$src};
+    my $resp = $self->nameserver->query( $doc->{$src}, 'PTR' );
 
-        my $lookup = sub {
-            my $resp = $self->nameserver->query( $doc->{$src}, 'PTR' );
-            # Use the first answer (should be first and only)
-            my ($answer) = $resp->answer;
-            return $answer->rdstring;
-        };
-
-        my $reverse = $self->config->{no_cache} ? $lookup->()
-                    : $self->cache->compute( $doc->{$src} => $lookup );
-
-        if( defined $reverse ) {
-            $result->add( $src, { $dst => $reverse } );
-        }
+    if( $resp->header->rcode eq 'NOERROR' ) {
+        # Use the first answer (should be first and only)
+        my ($answer) = $resp->answer;
+        return { $dst => $answer->rdstring };
     }
 }
 

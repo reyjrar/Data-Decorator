@@ -18,6 +18,18 @@ Provides the interface to cache data in plugins.
     with qw( Data::Decorator::Cache );
 
 
+=attr no_cache
+
+Disable caching by setting to true.
+
+=cut
+
+has no_cache => (
+    is      => 'ro',
+    isa     => Bool,
+    default => sub { 0 },
+);
+
 =attr cache_namespace
 
 The cache namespace to use, defaults to the instance name.

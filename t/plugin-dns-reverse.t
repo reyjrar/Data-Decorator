@@ -30,8 +30,8 @@ sub run_tests {
                 fields => {
                     src_ip => 'src_rdns',
                 },
+                no_cache => 1,
                 config => {
-                    no_cache => 1,
                     resolver => {
                         nameservers => [$server{addr}],
                         port => $server{port},

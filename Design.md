@@ -10,18 +10,16 @@ Overview of how to use and layout the code for Data::Decorator.
 rdns:
   plugin: DNS::Reverse
   cache: 10m
-  config:
-    fields:
-      dst_ip: dst_rdns
-      src_ip: src_rdns
+  fields:
+    dst_ip: dst_rdns
+    src_ip: src_rdns
 
 geoip:
   plugin: GeoIP
   cache: 24h
-  config:
-    fields:
-      dst_ip: dst_geoip
-      src_ip: src_geoip
+  fields:
+    dst_ip: dst_geoip
+    src_ip: src_geoip
 
 username:
   plugin: SQL
@@ -31,11 +29,11 @@ username:
       dsn: dbi:Pg:hostname=localhost
       username: test
       password: testing
-    query: SELECT user_name FROM users WHERE user_id = ?
-    params:
-      - user_id
-    fields:
-      user_id: user_name
+  query: SELECT user_name FROM users WHERE user_id = ?
+  params:
+    - user_id
+  fields:
+    user_id: user_name
   
 my_api:
   plugin: HTTP::API
@@ -46,8 +44,8 @@ my_api:
       X-Token: 187519826512859125
       X-Client-ID: 124214
     select: ip.reputation.score
-    fields:
-      src_ip: src_ip_score
+  fields:
+    src_ip: src_ip_score
 ```
 
 ```yaml

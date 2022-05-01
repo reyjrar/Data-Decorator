@@ -7,6 +7,8 @@ use Types::Common::Numeric qw( PositiveInt );
 use Types::Standard        qw( HashRef InstanceOf );
 use namespace::autoclean;
 
+# VERSION
+
 my $_last_minute;
 
 =attr calculator

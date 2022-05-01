@@ -1,14 +1,18 @@
 package Data::Decorator::Plugin::SQL;
+# ABSTRACT: Adds elements to a document from a SQL database
 
 use DBIx::Connector;
 
 use Moo;
+use Types::Standard qw( ArrayRef Str );
 use namespace::autoclean;
 
 with qw(
     Data::Decorator::Role::Exec
     Data::Decorator::Role::Plugin
 );
+
+# VERSION
 
 =attr connector
 
@@ -50,16 +54,61 @@ sub _build_connector {
     }
 }
 
-=method decorate()
+=attr query
+
+A SQL statement to execute.  Use C<?> to setup parameters.  Using the C<params>
+parameter to drop data into the query. e.g.,
+
+    my $d = Data::Decorator::Plugin::SQL->new(
+        config => {
+            dsn => ...,
+            username => ...,
+            password => ...,
+        },
+        query => q{
+            SELECT
+                field
+            FROM table
+            WHERE id = ?
+        },
+        params => [ "id" ],
+        fields => {
+            id => 'sql',
+        },
+    );
+
+The above would use the C<id> field in every document to retrieve the result
+and stash the value in the C<sql> field.
+
+=cut
+
+has query => (
+    is       => 'ro',
+    isa      => Str,
+    required => 1,
+);
+
+=attr params
+
+An array reference listing the field names in the document to use at each
+placeholder.
+
+=cut
+
+has params => (
+    is      => 'ro',
+    isa     => ArrayRef,
+    default => sub {[]},
+);
+
+=method lookup()
 
 Implements the plugin specific decoration operations
 
 =cut
 
-sub decorate {
+sub lookup {
     my ($self,$result) = @_;
-
-    my $c = $self->config;
 }
 
 1;

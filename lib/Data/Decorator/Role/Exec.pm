@@ -1,10 +1,10 @@
 package Data::Decorator::Role::Exec;
 # ABSTRACT: Adds a method to exec a command and collect it's output
 
-# VERSION
-
 use Capture::Tiny qw(capture);
 use Moo::Role;
+
+# VERSION
 
 =method exec_command
 

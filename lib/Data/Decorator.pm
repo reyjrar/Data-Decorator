@@ -103,7 +103,17 @@ sub decorate {
     my %t = ();
     foreach my $dec ( @{ $self->decorators } ) {
         my $t0 = [gettimeofday];
-        my $matched = $dec->decorate($result);
+        my $fields = $dec->fields;
+        my $matched = 0;
+        foreach my $src ( sort keys %{ $fields } ) {
+            my $doc = $result->document;
+            next unless length $doc->{$src};
+            my $dst = $fields->{$src};
+            if ( my $elements = $dec->lookup($src, $dst, $doc) ) {
+                $matched++;
+                $result->add( $src, $elements );
+            }
+        }
         my $tdiff = tv_interval($t0);
         $t{$dec->name} = $tdiff;
         last if $matched and $dec->is_final;
