@@ -4,7 +4,7 @@ package Data::Decorator::Plugin::DNS::Reverse;
 use Moo;
 use Net::DNS;
 use Socket qw( inet_pton AF_INET AF_INET6 );
-use Types::Standard qw( InstanceOf );
+use Types::Standard qw( Bool InstanceOf );
 use namespace::autoclean;
 
 with qw(
@@ -68,6 +68,19 @@ Set to true to completely disable the file system caching.
 sub _build_cache_expiry { '5m' }
 sub _build_priority     { 25 }
 
+=attr report_errors
+
+If set to true (the default), then the rcode will be returned for fields where
+there was an error.
+
+=cut
+
+has report_errors => (
+    is      => 'ro',
+    isa     => Bool,
+    default => sub {1},
+);
+
 =attr nameserver
 
 A L<Net::DNS::Resolver> object, if the plugin config section has a C<resolver>
@@ -102,6 +115,9 @@ sub lookup {
         # Use the first answer (should be first and only)
         my ($answer) = $resp->answer;
         return { $dst => $answer->rdstring };
+    }
+    elsif( $self->report_errors ) {
+        return { "${dst}_err" => $resp->header->rcode };
     }
 }
 
