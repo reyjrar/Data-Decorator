@@ -32,6 +32,8 @@ username:
       username: test
       password: testing
     query: SELECT user_name FROM users WHERE user_id = ?
+    params:
+      - user_id
     fields:
       user_id: user_name
   
