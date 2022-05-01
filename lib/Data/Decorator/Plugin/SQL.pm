@@ -101,6 +101,20 @@ has params => (
     default => sub {[]},
 );
 
+has _sth => (
+    is => 'lazy',
+    init_arg => undef.
+)
+
+sub _build_sth {
+    my ($self) = @_;
+
+    return $self->connector->run( fixup => sub {
+        my ($dbh) = @_;
+        return $dbh->prepare( $self->query );
+    });
+}
+
 =method lookup()
 
 Implements the plugin specific decoration operations
@@ -108,7 +122,28 @@ Implements the plugin specific decoration operations
 =cut
 
 sub lookup {
-    my ($self,$result) = @_;
+    my ($self,$src,$dst,$doc) = @_;
+
+    my @expected = @{ $self->params };
+    my @params = map { $doc->{$_} // () } @expected;
+
+    if( @expected == @params ) {
+        $self->_sth->execute(@params);
+        if( $self->_sth->rows() ) {
+            my @values = ();
+            while ( my $row = $self->_sth->fetchrow_hashref ) {
+                if( keys %{ $row } == 1 ) {
+                    push @values, values %{ $row };
+                }
+                else {
+                    push @values, $row;
+                }
+            }
+            if( @values ) {
+                return { $dst => @values == 1 ? $values[0] : \@values };
+            }
+        }
+    }
 }
 
 1;

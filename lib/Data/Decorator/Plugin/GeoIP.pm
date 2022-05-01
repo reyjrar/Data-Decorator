@@ -42,6 +42,7 @@ An instance of the L<MaxMind::DB::Reader::XS> to perform the lookups.
 has geoip_reader => (
     is  => 'lazy',
     isa => InstanceOf['MaxMind::DB::Reader::XS'],
+    handles => [qw(city)],
 );
 
 sub _build_geoip_reader {
@@ -54,7 +55,10 @@ sub _build_geoip_reader {
     foreach my $file (@search) {
         next unless -f $file;
         eval {
-            $reader = MaxMind::DB::Reader::XS->new( $file );
+            $reader = MaxMind::DB::Reader::XS->new(
+                file => $file,
+                locales => [ 'en' ],
+            );
             1;
         } or do {
             my $err = $@;
@@ -77,6 +81,21 @@ Finds an entry in the GeoIP database and returns a HashRef of the data.
 sub lookup {
     my ($src,$dst,$doc) = @_;
 
+    my %geo;
+    eval {
+        my $city = $self->city( ip => $doc->{$src} );
+
+        %geo = (
+             city     => $city->city_name,
+             country  => $city->country->iso_code,
+             location => join(',', $loc->latitude, $loc->longitude),
+        ):
+
+        my $pc = $city->postal->code;
+        $geo{postal_code} = $pc if $pc;
+    };
+
+    return { $dst => \%geo } if keys %geo;
 }
 
 1;
