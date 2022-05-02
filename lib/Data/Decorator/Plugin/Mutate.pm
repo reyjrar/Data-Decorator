@@ -12,14 +12,16 @@ with qw(
 
 sub _build_priority { 100 }
 
-=method decorate
+=method lookup
 
-Receives a L<Data::Decorator::Result> object and performs the plugins transformations.
+Receives the source field name, destination field name, and the full document.
+
+Returns a hash reference of updated keys/values.
 
 =cut
 
-sub decorate {
-    my ($self,$result) = @_;
+sub lookup {
+    my ($self,$src,$dst,$doc) = @_;
 }
 
 1;

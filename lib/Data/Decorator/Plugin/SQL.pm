@@ -36,16 +36,15 @@ sub _build_connector {
             next if $conn->{$k};
             push @missing, $k;
         }
-        if( !$conn->{password} and !$conn->{password_exec} ) {
+        if( !$conn->{password} && !$conn->{password_exec} ) {
             push @missing, "password or password_exec";
         }
         # Ensure we have all the parameters
         die sprintf ("%s - missing parameters in config block: %s",
-            __PACKAGE__, join(', ', @missing);
+            __PACKAGE__, join(', ', @missing)
         ) if @missing;
 
         my $password = $conn->{password} // $self->exec_command( $conn->{password_exec} );
-        # TODO: Instantiate handle
         return DBIx::Connector->new(@{ $conn }{qw(dsn username)}, $password);
     }
     else {
@@ -102,12 +101,12 @@ has params => (
 );
 
 has _sth => (
-    is => 'lazy',
-    init_arg => undef.
-)
+    is       => 'lazy',
+    init_arg => undef,
+);
 
 sub _build_sth {
-    my ($self) = @_;
+    my $self = shift;
 
     return $self->connector->run( fixup => sub {
         my ($dbh) = @_;

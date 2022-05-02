@@ -1,7 +1,7 @@
 package Data::Decorator::Plugin::GeoIP;
 # ABSTRACT: Provides GeoIP lookups
 
-use MaxMind::DB::Reader::XS;
+use MaxMind::DB::Reader;
 use Types::Standard qw( InstanceOf Str );
 
 use Moo;
@@ -35,20 +35,20 @@ has geoip_file => (
 
 =attr geoip_reader
 
-An instance of the L<MaxMind::DB::Reader::XS> to perform the lookups.
+An instance of the L<MaxMind::DB::Reader> to perform the lookups.
 
 =cut
 
 has geoip_reader => (
     is  => 'lazy',
-    isa => InstanceOf['MaxMind::DB::Reader::XS'],
+    isa => InstanceOf['MaxMind::DB::Reader'],
     handles => [qw(city)],
 );
 
 sub _build_geoip_reader {
-    my ($self) = @_;
+    my $self = shift;
 
-    my @search = length $self->geoip_file ? ( $self->geoip_file ) : @default_database;
+    my @search = length $self->geoip_file ? ( $self->geoip_file ) : @default_databases;
 
     my $reader;
 
@@ -79,17 +79,18 @@ Finds an entry in the GeoIP database and returns a HashRef of the data.
 =cut
 
 sub lookup {
-    my ($src,$dst,$doc) = @_;
+    my ($self,$src,$dst,$doc) = @_;
 
     my %geo;
     eval {
         my $city = $self->city( ip => $doc->{$src} );
+        my $loc  = $city->location;
 
         %geo = (
              city     => $city->city_name,
              country  => $city->country->iso_code,
              location => join(',', $loc->latitude, $loc->longitude),
-        ):
+        );
 
         my $pc = $city->postal->code;
         $geo{postal_code} = $pc if $pc;
