@@ -16,7 +16,6 @@ use namespace::autoclean;
 
 with qw(
     Data::Decorator::Role::PluginLoader
-    Data::Decorator::Role::Timing
 );
 
 sub _build_namespace { 'Data::Decorator::Plugin' }
@@ -102,7 +101,6 @@ sub decorate {
     my $result = Data::Decorator::Result->new( document => $orig );
     my %t = ();
     foreach my $dec ( @{ $self->decorators } ) {
-        my $t0 = [gettimeofday];
         my $fields = $dec->fields;
         my $matched = 0;
         foreach my $src ( sort keys %{ $fields } ) {
@@ -114,13 +112,8 @@ sub decorate {
                 $result->add( $src, $elements );
             }
         }
-        my $tdiff = tv_interval($t0);
-        $t{$dec->name} = $tdiff;
         last if $matched and $dec->is_final;
     }
-
-    # Record timing data
-    $self->add_timing(\%t);
 
     return $result;      # Return the log object
 }
