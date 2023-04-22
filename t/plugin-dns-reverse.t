@@ -29,6 +29,7 @@ sub run_tests {
                 plugin => 'DNS::Reverse',
                 fields => {
                     src_ip => 'src_rdns',
+                    "dest.ip" => "dest.rdns",
                 },
                 no_cache => 1,
                 config => {
@@ -42,10 +43,12 @@ sub run_tests {
 	);
     ok($dd, "loaded object");
 
-    my $doc = { foo => 1, src_ip => '8.8.8.8' };
+    my $doc = { foo => 1, src_ip => '8.8.8.8', dest => { ip => "1.2.3.4" } };
     my $result = $dd->decorate($doc);
+    use DDP;
+    p($result->document);
 
-    is_deeply( $result->document, { %$doc, src_rdns => 'localhost.localdomain.' },
+    is_deeply( $result->document, { %$doc, src_rdns => 'localhost.localdomain.', },
         "rdns plugin is working as expected"
     );
 }

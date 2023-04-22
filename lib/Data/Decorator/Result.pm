@@ -1,7 +1,9 @@
 package Data::Decorator::Result;
 # ABSTRACT: Result Object for a Data Decoration Operation
 
-use Ref::Util qw(is_arrayref is_hashref);
+use Data::Decorator::Util qw(:hash);
+use Hash::Merge::Simple qw( dclone_merge );
+use Ref::Util qw(is_arrayref is_hashref is_ref);
 use Storable qw(dclone);
 use Types::Standard qw( Str ArrayRef HashRef );
 
@@ -25,13 +27,13 @@ The resulting document after all decorators have run.
 =cut
 
 has document => (
-    is       => 'lazy',
+    is       => 'rw',
     isa      => HashRef,
     init_arg => undef,
+    builder  => sub {
+        dclone( $_[0]->_orig )
+    },
 );
-
-# Clone the Original Document
-sub _build_document { dclone( $_[0]->_orig ) }
 
 has _fields => (
     is      => 'rw',
@@ -68,6 +70,8 @@ sub added_fields {
 
 Takes a source field name and the hash of keys/values to add to the result.
 
+Returns itself, for chaining add calls.
+
 =cut
 
 sub add {
@@ -76,25 +80,15 @@ sub add {
     my $doc    = $self->document;
     my $fields = $self->_fields;
 
-    foreach my $k ( sort keys %{ $data } ) {
-        # Make sure there's data
-        next unless length $data->{$k};
-        # Record adding a field
-        push @{ $fields->{$src_field} }, $k
-            unless grep { $k eq $_ } @{ $fields->{$src_field} };
-        # Add the data
-        if( exists $doc->{$k} ) {
-            if( is_arrayref($doc->{$k}) ) {
-                push @{ $doc->{$k} }, $data->{$k};
-            }
-            else {
-                $doc->{$k} = [ $doc->{$k}, $data->{$k} ];
-            }
-        }
-        else {
-            $doc->{$k} = $data->{$k};
-        }
-    }
+    $self->document(dclone_merge($doc,$data));
+
+    $fields->{$src_field} ||= [];
+    my %existing = map { $_ => 1 } @{ $fields->{$src_field} };
+
+    push @{ $fields->{$src_field} },
+        grep { !$existing{$_} } hash_flatten_keys($data);
+
+    return $self;
 }
 
 1;
