@@ -15,7 +15,7 @@ use Sub::Exporter -setup => {
 
 use Ref::Util qw(is_arrayref is_hashref is_ref);
 
-=function hash_flatten_keys(hashref)
+=func hash_flatten_keys(hashref)
 
 Returns a list of flattened hash keys from the hash
 
@@ -41,7 +41,7 @@ sub hash_flatten_keys {
 }
 
 
-=function hash_path_get(path, hashref)
+=func hash_path_get(path, hashref)
 
 Returns the data at the requested location, supports "x.c" style keys as hash paths.
 
@@ -65,7 +65,7 @@ sub hash_path_get {
     return $ref->{$key};
 }
 
-=function hash_path_expand( path, value )
+=func hash_path_expand( path, value )
 
 Takes two arguments, a path and a value.
 
