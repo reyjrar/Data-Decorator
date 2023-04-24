@@ -27,10 +27,10 @@ else {
 
 sub run_tests {
 	my $dd = Data::Decorator->new(
-        expand_hash_keys => 1,
 		decorators => {
             rdns => {
                 plugin => 'DNS::Reverse',
+                expand_hash_keys => 1,
                 fields => {
                     src_ip => 'src_rdns',
                     "dest.ip" => "dest.rdns",

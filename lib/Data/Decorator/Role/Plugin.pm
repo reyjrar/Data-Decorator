@@ -2,7 +2,7 @@ package Data::Decorator::Role::Plugin;
 # ABSTRACT: Common interface for implementing an Data::Decorator plugin
 
 use Moo::Role;
-use Types::Standard qw(Bool HashRef Int Str);
+use Types::Standard qw(Bool Enum HashRef Int Str);
 
 with qw(
     Data::Decorator::Role::Cache
@@ -146,6 +146,41 @@ has fields => (
     is      => 'ro',
     isa     => HashRef,
     default => sub {{}},
+);
+
+=attr level
+
+Defaults to C<fields>, can also be C<document>.
+
+When set to C<fields>, only documents with defined values in their C<fields>
+elements will be matched.
+
+When set to C<document>, all documents will be passed through the plugin.
+
+=cut
+
+has level => (
+    is      => 'lazy',
+    isa     => Enum[qw(fields documents)],
+    builder => sub { 'fields' },
+);
+
+=attr expand_hash_keys
+
+B<Boolean, default false>
+
+If set to true, specifiying a destination field of C<x.y.z> will expand the structure into:
+
+    { x => { y => { z => $value } } }
+
+Instead of installing a C<x.y.z> in the document hash.
+
+=cut
+
+has expand_hash_keys => (
+    is      => 'ro',
+    isa     => Bool,
+    default => sub { 0 },
 );
 
 =attr config

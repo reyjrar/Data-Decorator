@@ -46,6 +46,16 @@ my_api:
     select: ip.reputation.score
   fields:
     src_ip: src_ip_score
+
+mutate:
+  plugin: mutate
+  config:
+    rename:
+      src: dst
+    remove:
+      - test
+    add:
+      labels.build: myrole
 ```
 
 ```yaml

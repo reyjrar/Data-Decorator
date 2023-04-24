@@ -7,11 +7,11 @@ use warnings;
 
 use Sub::Exporter -setup => {
     exports => [ qw(
-        hash_flatten_keys hash_path_get hash_path_expand
+        hash_flatten_keys hash_path_del hash_path_get hash_path_expand
     )],
     groups => {
-        hash    => [qw(hash_flatten_keys hash_path_get hash_path_expand)],
-        default => [qw(hash_flatten_keys hash_path_get hash_path_expand)],
+        hash    => [qw(hash_flatten_keys hash_path_del hash_path_get hash_path_expand)],
+        default => [qw(hash_flatten_keys hash_path_del hash_path_get hash_path_expand)],
     },
 };
 
@@ -42,6 +42,30 @@ sub hash_flatten_keys {
     return @collected;
 }
 
+
+=func hash_path_del(path, hashref)
+
+Deletes and returns the data at the requested location, supports "x.c" style keys as hash paths.
+
+=cut
+
+sub hash_path_del {
+    my ( $path, $doc ) = @_;
+
+    # Simplest case
+    return delete $doc->{$path} if $doc->{$path};
+
+    my @path = split /\.+/, $path;
+    my $key  = pop @path;
+
+    my $ref = $doc;
+    foreach my $part ( @path ) {
+        return unless $ref->{$part};
+        $ref = $ref->{$part};
+    }
+
+    return delete $ref->{$key};
+}
 
 =func hash_path_get(path, hashref)
 

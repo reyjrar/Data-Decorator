@@ -125,23 +125,6 @@ sub _build_decorators {
     return [ sort { $a->priority <=> $b->priority || $a->name cmp $b->name } @decorators ];
 }
 
-=attr expand_hash_keys
-
-B<Boolean, default false>
-
-If set to true, specifiying a destination field of C<x.y.z> will expand the structure into:
-
-    { x => { y => { z => $value } } }
-
-Instead of installing a C<x.y.z> in the document hash.
-
-=cut
-
-has expand_hash_keys => (
-    is      => 'ro',
-    isa     => Bool,
-    default => sub { 0 },
-);
 
 =method decorate
 
@@ -156,22 +139,28 @@ sub decorate {
     my $result = Data::Decorator::Result->new( document => $orig );
     my %t = ();
     foreach my $dec ( @{ $self->decorators } ) {
-        my $fields = $dec->fields;
-        my $matched = 0;
-        foreach my $src ( sort keys %{ $fields } ) {
-            my $doc = $result->document;
-            my $val = hash_path_get($src, $doc);
-            next unless length $val;
-            my $dst = $fields->{$src};
-            if ( my $elements = $dec->lookup($doc, $val) ) {
-                $matched++;
-                $result->add( $src,
-                    $self->expand_hash_keys ? hash_path_expand( $dst => $elements )
-                                            : { $dst => $elements }
-                );
+        if( $dec->level eq 'fields' ) {
+            my $fields = $dec->fields;
+            my $matched = 0;
+            foreach my $src ( sort keys %{ $fields } ) {
+                my $doc = $result->document;
+                my $val = hash_path_get($src, $doc);
+                next unless length $val;
+                my $dst = $fields->{$src};
+                if ( my $elements = $dec->lookup($doc, $val) ) {
+                    $matched++;
+                    $result->add( $src,
+                        $dec->expand_hash_keys ? hash_path_expand( $dst => $elements )
+                                                : { $dst => $elements }
+                    );
+                }
             }
+            last if $matched and $dec->is_final;
         }
-        last if $matched and $dec->is_final;
+        elsif ( $dec->level eq 'documents' ) {
+            # The plugin modifies the document directly
+            $dec->lookup($result->document);
+        }
     }
 
     return $result;      # Return the log object
