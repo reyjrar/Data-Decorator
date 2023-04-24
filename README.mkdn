@@ -16,7 +16,15 @@ Data::Decorator is
 
 # ATTRIBUTES
 
-## decorators\_config
+## config\_file
+
+Location of the config file, defaults to trying the following in order:
+
+    .data-decorator.yaml
+    $ENV{HOME}/.data-decorator.yaml
+    /etc/data-decorator.yaml
+
+## decorator\_config
 
 **Init Arg is decorators**.
 
@@ -25,6 +33,16 @@ Config for the decorators to load.
 ## decorators
 
 A hash ref of named decorator objects with their initialization parameters,
+
+## expand\_hash\_keys
+
+**Boolean, default false**
+
+If set to true, specifiying a destination field of `x.y.z` will expand the structure into:
+
+    { x => { y => { z => $value } } }
+
+Instead of installing a `x.y.z` in the document hash.
 
 # METHODS
 

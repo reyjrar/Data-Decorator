@@ -4,8 +4,9 @@ package Data::Decorator;
 use List::Util      qw( any );
 use Ref::Util       qw( is_ref is_arrayref is_coderef is_regexpref );
 use Time::HiRes     qw( gettimeofday tv_interval );
-use Types::Standard qw( ArrayRef Bool ConsumerOf HashRef );
+use Types::Standard qw( ArrayRef Bool ConsumerOf HashRef Str );
 use Storable        qw( dclone );
+use YAML::XS        qw();
 
 use Data::Decorator::Result;
 use Data::Decorator::Util qw(:hash);
@@ -21,7 +22,29 @@ with qw(
 
 sub _build_namespace { 'Data::Decorator::Plugin' }
 
-=attr decorators_config
+=attr config_file
+
+Location of the config file, defaults to trying the following in order:
+
+    .data-decorator.yaml
+    $ENV{HOME}/.data-decorator.yaml
+    /etc/data-decorator.yaml
+
+=cut
+
+has config_file => (
+    is      => 'lazy',
+    builder => sub {
+        my @files = qw( /etc/data-decorator.yaml );
+        unshift @files, "$ENV{HOME}/.data-decorator.yaml" if $ENV{HOME};
+        unshift @files, '.data-decorator.yaml';
+        foreach my $file (@files) {
+            return $file if -r $file;
+        }
+    },
+);
+
+=attr decorator_config
 
 B<Init Arg is decorators>.
 
@@ -29,11 +52,25 @@ Config for the decorators to load.
 
 =cut
 
-has decorators_config => (
-    is       => 'ro',
+has decorator_config => (
+    is       => 'lazy',
     isa      => HashRef,
     init_arg => 'decorators',
-    default  => sub {{}},
+    builder  => sub {
+        my ($self) = @_;
+
+        my $config = {};
+        if( my $file = $self->config_file ) {
+            eval {
+                $config = YAML::XS::LoadFile($file);
+            } or do {
+                my $err = $@;
+                warn "failed loading $file: $err";
+            };
+        }
+
+        return $config;
+    },
 );
 
 
@@ -52,7 +89,7 @@ has 'decorators' => (
 sub _build_decorators {
     my($self) = @_;
 
-    my $config     = $self->decorators_config;
+    my $config     = $self->decorator_config;
     my $plugins    = $self->plugins;
     my @decorators = ();
 
@@ -124,6 +161,7 @@ sub decorate {
         foreach my $src ( sort keys %{ $fields } ) {
             my $doc = $result->document;
             my $val = hash_path_get($src, $doc);
+            next unless length $val;
             my $dst = $fields->{$src};
             if ( my $elements = $dec->lookup($doc, $val) ) {
                 $matched++;
