@@ -79,11 +79,11 @@ Finds an entry in the GeoIP database and returns a HashRef of the data.
 =cut
 
 sub lookup {
-    my ($self,$src,$dst,$doc) = @_;
+    my ($self,$doc,$val) = @_;
 
     my %geo;
     eval {
-        my $city = $self->city( ip => $doc->{$src} );
+        my $city = $self->city( ip => $val );
         my $loc  = $city->location;
 
         %geo = (
@@ -96,7 +96,7 @@ sub lookup {
         $geo{postal_code} = $pc if $pc;
     };
 
-    return { $dst => \%geo } if keys %geo;
+    return \%geo if keys %geo;
 }
 
 1;

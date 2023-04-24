@@ -1,7 +1,6 @@
 package Data::Decorator::Plugin::DNS::Reverse;
 # ABSTRACT: Get the reverse record for any IP records
 
-use Data::Decorator::Util qw(:hash);
 use Moo;
 use Net::DNS;
 use Socket qw( inet_pton AF_INET AF_INET6 );
@@ -104,19 +103,23 @@ addresses and performs a reverse DNS lookup.
 =cut
 
 sub lookup {
-    my ($self,$src,$dst,$doc) = @_;
+    my ($self,$doc,$val) = @_;
 
-    my $data = hash_path_get($src => $doc);
-    my $resp = $self->nameserver->query( $data, 'PTR' );
-
-    if( $resp->header->rcode eq 'NOERROR' ) {
-        # Use the first answer (should be first and only)
-        my ($answer) = $resp->answer;
-        return hash_path_expand( $dst => $answer->rdstring );
+    if( my $resp = $self->nameserver->query( $val, 'PTR' ) ) {
+        if( $resp->header->rcode eq 'NOERROR' ) {
+            # Use the first answer (should be first and only)
+            my ($answer) = $resp->answer;
+            return $answer->rdstring;
+        }
+        elsif( $self->report_errors ) {
+            return { error => $resp->header->rcode };
+        }
     }
     elsif( $self->report_errors ) {
-        return hash_path_expand( "error.$dst" => $resp->header->rcode );
+        return { error => "lookup failed" };
     }
+
+    return $self;
 }
 
 1;

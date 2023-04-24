@@ -23,10 +23,12 @@ Provides the interface to load L<Data::Decorator> plugins in the correct order.
 
 =head1 INTERFACE
 
-=head2 lookup
+=head2 lookup($full_document, [$value])
 
 This method will be called everytime a document matches this context.  It receives
-a copy of the HashRef it was passed, return the decorated HashRef.
+a copy of the HashRef it was passed, and a value of the source field if required.
+
+Return the value you expect at the destination field.
 
 =cut
 
@@ -37,15 +39,15 @@ requires qw(
 around lookup => sub {
     my $orig = shift;
     my $self = shift;
+    my ($doc,$val) = @_;
 
-    if( $self->no_cache ) {
-        return $orig->($self,@_);
+    if( $self->no_cache || !length $val) {
+        return $orig->($self,$doc,$val);
     }
 
-    my ($src,$dst,$doc) = @_;
 
-    return $self->cache->compute($doc->{$src}, sub {
-        $self->lookup(@_);
+    return $self->cache->compute($val, sub {
+        $self->lookup($doc,$val);
     });
 };
 

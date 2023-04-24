@@ -12,6 +12,9 @@ my %server = (
     addr => '127.0.0.1',
 );
 
+# Number of queries expected, controls the name server loop
+my $queries = 2;
+
 # Fork a DNS server for testing
 my $pid = fork();
 if( $pid ) {
@@ -45,10 +48,10 @@ sub run_tests {
 
     my $doc = { foo => 1, src_ip => '8.8.8.8', dest => { ip => "1.2.3.4" } };
     my $result = $dd->decorate($doc);
-    use DDP;
-    p($result->document);
 
-    is_deeply( $result->document, { %$doc, src_rdns => 'localhost.localdomain.', },
+    my $expected = { %$doc, src_rdns => 'localhost.localdomain.', };
+    $expected->{dest}{rdns} = 'localhost.localdomain.';
+    is_deeply( $result->document, $expected,
         "rdns plugin is working as expected"
     );
 }
@@ -76,7 +79,7 @@ sub run_nameserver {
         },
     );
     ok($server, "server created");
-	$server->loop_once;
+	$server->loop_once for 1 .. $queries;
     pass("handled response");
     sleep 1;
 }

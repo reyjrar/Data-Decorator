@@ -121,7 +121,7 @@ Implements the plugin specific decoration operations
 =cut
 
 sub lookup {
-    my ($self,$src,$dst,$doc) = @_;
+    my ($self,$doc,$val) = @_;
 
     my @expected = @{ $self->params };
     my @params = map { $doc->{$_} // () } @expected;
@@ -139,7 +139,7 @@ sub lookup {
                 }
             }
             if( @values ) {
-                return { $dst => @values == 1 ? $values[0] : \@values };
+                return @values == 1 ? $values[0] : \@values;
             }
         }
     }

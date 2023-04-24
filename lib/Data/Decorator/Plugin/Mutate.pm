@@ -21,7 +21,7 @@ Returns a hash reference of updated keys/values.
 =cut
 
 sub lookup {
-    my ($self,$src,$dst,$doc) = @_;
+    my ($self,$doc,$val) = @_;
 }
 
 1;

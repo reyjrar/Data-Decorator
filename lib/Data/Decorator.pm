@@ -8,6 +8,7 @@ use Types::Standard qw( ArrayRef ConsumerOf HashRef );
 use Storable        qw( dclone );
 
 use Data::Decorator::Result;
+use Data::Decorator::Util qw(:hash);
 
 use Moo;
 use namespace::autoclean;
@@ -105,11 +106,11 @@ sub decorate {
         my $matched = 0;
         foreach my $src ( sort keys %{ $fields } ) {
             my $doc = $result->document;
-            next unless length $doc->{$src};
+            my $val = hash_path_get($src, $doc);
             my $dst = $fields->{$src};
-            if ( my $elements = $dec->lookup($src, $dst, $doc) ) {
+            if ( my $elements = $dec->lookup($doc, $val) ) {
                 $matched++;
-                $result->add( $src, $elements );
+                $result->add( $src, hash_path_expand( $dst => $elements ));
             }
         }
         last if $matched and $dec->is_final;
