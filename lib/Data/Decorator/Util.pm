@@ -3,6 +3,8 @@ package Data::Decorator::Util;
 use v5.16;
 use warnings;
 
+# VERSION
+
 use Sub::Exporter -setup => {
     exports => [ qw(
         hash_flatten_keys hash_path_get hash_path_expand
