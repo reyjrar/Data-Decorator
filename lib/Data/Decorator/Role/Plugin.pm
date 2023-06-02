@@ -47,7 +47,7 @@ around lookup => sub {
 
 
     return $self->cache->compute($val, sub {
-        $self->lookup($doc,$val);
+        $orig->($self,$doc,$val);
     });
 };
 
