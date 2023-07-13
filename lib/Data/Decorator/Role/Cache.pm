@@ -14,8 +14,8 @@ Provides the interface to cache data in plugins.
 
     package MyApp::Decorators::Db::LookUpEmployee;
 
-    use Moo::Role;
-    with qw( Data::Decorator::Cache );
+    use Moo;
+    with qw( Data::Decorator::Role::Cache );
 
 
 =attr no_cache

@@ -12,20 +12,30 @@ my $dd = Data::Decorator->new(
             geoip_file => "$RealBin/data/test.mmdb",
             fields => {
                 src_ip => 'src_geo',
-            }
+            },
+            no_cache => 1,
         }
     },
 );
 
+ok( @{ $dd->decorators }, "instantiated the geo decorator" );
+
+# Geo Expected
 my $geo = {
     city_name => 'Richmond',
+    country => {
+        iso_code => 'US',
+    },
+    location => "37,120",
 };
 
-my $doc = { src_ip => '10.0.1.1' };
-my $exp = { %$doc, src_geoip => $geo };
+# Document
+my $doc = { src_ip => '192.168.0.1' };
+
+# Assembled Document
+my $exp = { %$doc, src_geo => $geo };
 
 my $res = $dd->decorate($doc);
-
 is_deeply( $res->document, $exp,
     "geoip found and inserted data"
 );

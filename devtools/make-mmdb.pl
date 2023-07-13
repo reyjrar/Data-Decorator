@@ -7,17 +7,11 @@ use MaxMind::DB::Writer::Tree;
 
 my %types = (
 	city_name => 'utf8_string',
-	country => {
-        map => {
-            iso_code => 'utf8_string',
-        }
-    },
-    location => {
-        map => {
-            latitude => 'utf8_string',
-            longitude => 'utf8_string',
-        }
-    }
+	country => 'map',
+        iso_code => 'utf8_string',
+    location => 'map',
+        latitude => 'utf8_string',
+        longitude => 'utf8_string',
 );
 
 use DDP;
@@ -28,11 +22,13 @@ my $tree = MaxMind::DB::Writer::Tree->new(
 	database_type         => 'Test-IP-Data',
 	languages             => ['en'],
 	description           => { en => 'Test database of IP data' },
-	map_key_type_callback => sub { p(@_); $types{ $_[0] } },
+    map_key_type_callback => sub { $types{ $_[0] } },
+    # Allow us to insert RFC1918 addresses
+    remove_reserved_networks => 0,
 );
 
 $tree->insert_network(
-	'10.0.0.0/8',
+	'192.168.0.0/24',
 	{
         city_name => 'Richmond',
         country   => {
