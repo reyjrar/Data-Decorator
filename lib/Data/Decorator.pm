@@ -137,7 +137,6 @@ sub decorate {
     my ($self,$orig) = @_;
 
     my $result = Data::Decorator::Result->new( document => $orig );
-    my %t = ();
     foreach my $dec ( @{ $self->decorators } ) {
         if( $dec->level eq 'fields' ) {
             my $fields = $dec->fields;

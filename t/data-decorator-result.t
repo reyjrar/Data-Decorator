@@ -41,10 +41,9 @@ my %src2 = (
 $result->add( src_ip => \%src2 );
 cmp_deeply( $result->document, { %{ $doc }, %src, %src2, %dst }, "added third set of fields to the result document");
 
-cmp_deeply( $result->added_fields('src_ip'), [
-        qw(src_rdns src_geoip.city src_geoip.country src_iptype.confidence src_iptype.type
-        )
-    ],
+cmp_deeply( $result->added_fields('src_ip'), [qw(
+       src_rdns src_geoip.city src_geoip.country src_iptype.confidence src_iptype.type
+    )],
     "looking up src_ip's added fields returns correctly"
 );
 

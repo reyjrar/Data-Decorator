@@ -17,25 +17,25 @@ sub run_nameserver {
         LocalAddr => $server{addr},
         LocalPort => $server{port},
         ReplyHandler => sub {
-			my @incoming = @_;
-			my @names    = qw(qname qclass qtype peerhost query conn);
-			my %q = map { shift(@names) => $_ } @incoming;
+            my @incoming = @_;
+            my @names    = qw(qname qclass qtype peerhost query conn);
+            my %q = map { shift(@names) => $_ } @incoming;
 
-			my $rcode = "NOERROR";
-			my (@ans,@auth,@add);
+            my $rcode = "NOERROR";
+            my (@ans,@auth,@add);
 
-			my %answers = qw(
-				PTR localhost.localdomain
-			);
+            my %answers = qw(
+                PTR localhost.localdomain
+            );
 
-			my $name = lc $q{qname};
-			my $answer = $answers{$q{qtype}} || 'UNKNOWN';
-			my $response = "$q{qname} $q{qclass} $q{qtype} $answer";
-			push @ans, Net::DNS::RR->new($response);
+            my $name = lc $q{qname};
+            my $answer = $answers{$q{qtype}} || 'UNKNOWN';
+            my $response = "$q{qname} $q{qclass} $q{qtype} $answer";
+            push @ans, Net::DNS::RR->new($response);
             printf "Responding with: %s\n", $response;
-			return ( $rcode, \@ans, \@auth, \@add, );
+            return ( $rcode, \@ans, \@auth, \@add, );
         },
     );
     say "Server running on $server{addr}:$server{port}";
-	$server->main_loop;
+    $server->main_loop;
 }

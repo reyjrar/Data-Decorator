@@ -2,8 +2,7 @@ use strict;
 use warnings;
 
 use Data::Decorator;
-use Test::More tests => 4;
-use Test::SharedFork;
+use Test::More qw(no_plan);
 use Net::DNS::Nameserver;
 
 my %server = (
@@ -16,18 +15,14 @@ my %server = (
 my $queries = 2;
 
 # Fork a DNS server for testing
-my $pid = fork();
-if( $pid ) {
-    run_nameserver();
-}
-else {
-    sleep 1;
-    run_tests();
-}
+my $srv = run_nameserver();
+run_tests();
+$srv->stop_server;
+done_testing;
 
 sub run_tests {
-	my $dd = Data::Decorator->new(
-		decorators => {
+    my $dd = Data::Decorator->new(
+        decorators => {
             rdns => {
                 plugin => 'DNS::Reverse',
                 expand_hash_keys => 1,
@@ -43,8 +38,8 @@ sub run_tests {
                     }
                 }
             }
-		}
-	);
+        }
+    );
     ok($dd, "loaded object");
 
     my $doc = { foo => 1, src_ip => '8.8.8.8', dest => { ip => "1.2.3.4" } };
@@ -62,25 +57,24 @@ sub run_nameserver {
         LocalAddr => $server{addr},
         LocalPort => $server{port},
         ReplyHandler => sub {
-			my @incoming = @_;
-			my @names    = qw(qname qclass qtype peerhost query conn);
-			my %q = map { shift(@names) => $_ } @incoming;
+            my @incoming = @_;
+            my @names    = qw(qname qclass qtype peerhost query conn);
+            my %q = map { shift(@names) => $_ } @incoming;
 
-			my $rcode = "NOERROR";
-			my (@ans,@auth,@add);
+            my $rcode = "NOERROR";
+            my (@ans,@auth,@add);
 
-			my %answers = qw(
-				PTR localhost.localdomain
-			);
+            my %answers = qw(
+                PTR localhost.localdomain
+            );
 
-			my $name = lc $q{qname};
-			my $answer = $answers{$q{qtype}} || 'UNKNOWN';
-			push @ans, Net::DNS::RR->new("$q{qname} $q{qclass} $q{qtype} $answer");
-			return ( $rcode, \@ans, \@auth, \@add, );
+            my $name = lc $q{qname};
+            my $answer = $answers{$q{qtype}} || 'UNKNOWN';
+            push @ans, Net::DNS::RR->new("$q{qname} $q{qclass} $q{qtype} $answer");
+            return ( $rcode, \@ans, \@auth, \@add, );
         },
     );
     ok($server, "server created");
-	$server->loop_once for 1 .. $queries;
-    pass("handled response");
-    sleep 1;
+    $server->start_server;
+    return $server;
 }
