@@ -3,3 +3,4 @@ verbose = 8
 theme = (pbp || security) && bugs
 
 [-Subroutines::RequireFinalReturn]
+[-ValuesAndExpressions::ProhibitAccessOfPrivateData]
