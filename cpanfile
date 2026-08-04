@@ -19,6 +19,7 @@ requires "Ref::Util" => "0";
 requires "Socket" => "0";
 requires "Storable" => "0";
 requires "Sub::Exporter" => "0";
+requires "Text::Handlebars" => "0";
 requires "Time::HiRes" => "0";
 requires "Types::Standard" => "0";
 requires "YAML::XS" => "0";
