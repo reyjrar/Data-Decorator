@@ -6,7 +6,6 @@ use Types::Standard qw( Bool InstanceOf );
 use namespace::autoclean;
 
 with qw(
-    Data::Decorator::Role::Exec
     Data::Decorator::Role::Plugin
     Data::Decorator::Role::Template
 );

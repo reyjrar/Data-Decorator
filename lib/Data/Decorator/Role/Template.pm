@@ -3,6 +3,7 @@ package Data::Decorator::Role::Template;
 
 use Text::Handlebars;
 use Moo::Role;
+use Types::Standard qw(InstanceOf);
 
 # VERSION
 
